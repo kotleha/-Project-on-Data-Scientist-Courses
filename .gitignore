@@ -1,3 +1,2 @@
-echo ".history" >> .gitignore
-echo "dst-3.0_16_1_hh_database.csv" >> .gitignore
 dst-3.0_16_1_hh_database.csv
+.history/
