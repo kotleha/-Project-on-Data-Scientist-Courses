@@ -55,9 +55,15 @@ def get_experience(arg):
     months = 0
     for index, item in enumerate(arg_splitted):
         if item in year_words:
-            years = int(arg_splitted[index - 1])
+            try:
+                years = int(arg_splitted[index - 1])
+            except ValueError:
+                years = 0
         if item in month_words:
-            months = int(arg_splitted[index - 1])
+            try:
+                months = int(arg_splitted[index - 1])
+            except ValueError:
+                months = 0
     return years * 12 + months
 
 df['Опыт работы (месяц)'] = df['Опыт работы'].apply(get_experience)
@@ -89,7 +95,19 @@ df['Готовность к переезду'] = df['Город, переезд,
 df['Готовность к командировкам'] = df['Город, переезд, командировки'].apply(get_ready_for_business_trips)
 df.drop(columns=['Город, переезд, командировки'], inplace=True)
 
-# Задача 5: Обработка столбца "ЗП"
+# Задача 5: One Hot Encoding для столбцов "Занятость" и "График"
+job_types = ['полная занятость', 'частичная занятость', 'проектная работа', 'стажировка', 'волонтерство']
+schedule_types = ['полный день', 'сменный график', 'гибкий график', 'удаленная работа', 'вахтовый метод']
+
+for job in job_types:
+    df[job] = df['Занятость'].apply(lambda x: job in x)
+
+for schedule in schedule_types:
+    df[schedule] = df['График'].apply(lambda x: schedule in x)
+
+df.drop(columns=['Занятость', 'График'], inplace=True)
+
+# Задача 6: Обработка столбца "ЗП"
 def parse_salary(salary):
     if pd.isna(salary):
         return pd.Series([None, None])
@@ -131,5 +149,13 @@ df['close'] = df['close'].fillna(1)
 df['ЗП (руб)'] = (df['ЗП (сумма)'] * df['close'] / df['Пропорция']).round(2)
 df.drop(columns=['ЗП', 'ЗП (сумма)', 'Валюта', 'ISO Валюта', 'Пропорция', 'date', 'currency', 'close'], inplace=True)
 
+# Удаление ненужных столбцов после расчета ЗП (руб)
+columns_to_drop = ['per', 'time', 'vol', 'proportion']
+df.drop(columns=columns_to_drop, inplace=True)
+
 # Итоговая проверка
 print(df.info())
+
+# Сохранение итоговой таблицы в файл
+output_file_path = '/home/sexlexx/Desktop/-Project-on-Data-Scientist-Courses/processed_resume_data.csv'
+df.to_csv(output_file_path, index=False)
